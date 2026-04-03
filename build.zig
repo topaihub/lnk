@@ -19,6 +19,12 @@ pub fn build(b: *std.Build) void {
         }),
     });
     exe.root_module.addImport("framework", framework_mod);
+    exe.root_module.addCSourceFile(.{
+        .file = b.path("deps/sqlite3/sqlite3.c"),
+        .flags = &.{ "-DSQLITE_OMIT_LOAD_EXTENSION", "-DSQLITE_THREADSAFE=0" },
+    });
+    exe.root_module.addIncludePath(b.path("deps/sqlite3"));
+    exe.root_module.link_libc = true;
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
