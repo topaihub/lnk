@@ -85,16 +85,16 @@ pub const Db = struct {
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.handle, "SELECT name,original_path,type,status FROM entries", -1, &stmt, null) != c.SQLITE_OK) return error.SqlitePrepareFailed;
         defer _ = c.sqlite3_finalize(stmt);
-        var list = std.ArrayList(Entry).init(allocator);
+        var list: std.ArrayListUnmanaged(Entry) = .empty;
         while (c.sqlite3_step(stmt) == c.SQLITE_ROW) {
-            try list.append(.{
+            try list.append(allocator, .{
                 .name = try dupeCol(allocator, stmt, 0),
                 .original_path = try dupeCol(allocator, stmt, 1),
                 .entry_type = try dupeCol(allocator, stmt, 2),
                 .status = try dupeCol(allocator, stmt, 3),
             });
         }
-        return list.toOwnedSlice();
+        return try list.toOwnedSlice(allocator);
     }
 
     pub fn updateStatus(self: *Db, name: [*:0]const u8, status: [*:0]const u8) !void {
