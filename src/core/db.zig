@@ -47,8 +47,8 @@ pub const Db = struct {
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.handle, "INSERT OR REPLACE INTO config(key,value) VALUES(?,?)", -1, &stmt, null) != c.SQLITE_OK) return error.SqlitePrepareFailed;
         defer _ = c.sqlite3_finalize(stmt);
-        _ = c.sqlite3_bind_text(stmt, 1, key, -1, c.SQLITE_TRANSIENT);
-        _ = c.sqlite3_bind_text(stmt, 2, value, -1, c.SQLITE_TRANSIENT);
+        _ = c.sqlite3_bind_text(stmt, 1, key, -1, null);
+        _ = c.sqlite3_bind_text(stmt, 2, value, -1, null);
         if (c.sqlite3_step(stmt) != c.SQLITE_DONE) return error.SqliteStepFailed;
     }
 
@@ -56,7 +56,7 @@ pub const Db = struct {
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.handle, "SELECT value FROM config WHERE key=?", -1, &stmt, null) != c.SQLITE_OK) return error.SqlitePrepareFailed;
         defer _ = c.sqlite3_finalize(stmt);
-        _ = c.sqlite3_bind_text(stmt, 1, key, -1, c.SQLITE_TRANSIENT);
+        _ = c.sqlite3_bind_text(stmt, 1, key, -1, null);
         if (c.sqlite3_step(stmt) != c.SQLITE_ROW) return null;
         const raw: [*c]const u8 = c.sqlite3_column_text(stmt, 0);
         const len: usize = @intCast(c.sqlite3_column_bytes(stmt, 0));
@@ -67,9 +67,9 @@ pub const Db = struct {
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.handle, "INSERT INTO entries(name,original_path,type) VALUES(?,?,?)", -1, &stmt, null) != c.SQLITE_OK) return error.SqlitePrepareFailed;
         defer _ = c.sqlite3_finalize(stmt);
-        _ = c.sqlite3_bind_text(stmt, 1, name, -1, c.SQLITE_TRANSIENT);
-        _ = c.sqlite3_bind_text(stmt, 2, original_path, -1, c.SQLITE_TRANSIENT);
-        _ = c.sqlite3_bind_text(stmt, 3, entry_type, -1, c.SQLITE_TRANSIENT);
+        _ = c.sqlite3_bind_text(stmt, 1, name, -1, null);
+        _ = c.sqlite3_bind_text(stmt, 2, original_path, -1, null);
+        _ = c.sqlite3_bind_text(stmt, 3, entry_type, -1, null);
         if (c.sqlite3_step(stmt) != c.SQLITE_DONE) return error.SqliteStepFailed;
     }
 
@@ -77,7 +77,7 @@ pub const Db = struct {
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.handle, "DELETE FROM entries WHERE name=?", -1, &stmt, null) != c.SQLITE_OK) return error.SqlitePrepareFailed;
         defer _ = c.sqlite3_finalize(stmt);
-        _ = c.sqlite3_bind_text(stmt, 1, name, -1, c.SQLITE_TRANSIENT);
+        _ = c.sqlite3_bind_text(stmt, 1, name, -1, null);
         if (c.sqlite3_step(stmt) != c.SQLITE_DONE) return error.SqliteStepFailed;
     }
 
@@ -101,8 +101,8 @@ pub const Db = struct {
         var stmt: ?*c.sqlite3_stmt = null;
         if (c.sqlite3_prepare_v2(self.handle, "UPDATE entries SET status=?,updated_at=datetime('now') WHERE name=?", -1, &stmt, null) != c.SQLITE_OK) return error.SqlitePrepareFailed;
         defer _ = c.sqlite3_finalize(stmt);
-        _ = c.sqlite3_bind_text(stmt, 1, status, -1, c.SQLITE_TRANSIENT);
-        _ = c.sqlite3_bind_text(stmt, 2, name, -1, c.SQLITE_TRANSIENT);
+        _ = c.sqlite3_bind_text(stmt, 1, status, -1, null);
+        _ = c.sqlite3_bind_text(stmt, 2, name, -1, null);
         if (c.sqlite3_step(stmt) != c.SQLITE_DONE) return error.SqliteStepFailed;
     }
 

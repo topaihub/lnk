@@ -1,0 +1,90 @@
+name: Release
+
+env:
+  ZIG_VERSION: "0.15.2"
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x86_64
+            zig_target: x86_64-linux-musl
+            ext: ""
+          - os: ubuntu-latest
+            target: linux-aarch64
+            zig_target: aarch64-linux-musl
+            ext: ""
+          - os: macos-latest
+            target: macos-aarch64
+            zig_target: aarch64-macos
+            ext: ""
+          - os: macos-latest
+            target: macos-x86_64
+            zig_target: x86_64-macos
+            ext: ""
+          - os: windows-latest
+            target: windows-x86_64
+            zig_target: x86_64-windows
+            ext: ".exe"
+          - os: windows-latest
+            target: windows-aarch64
+            zig_target: aarch64-windows
+            ext: ".exe"
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Zig ${{ env.ZIG_VERSION }}
+        run: bash .github/scripts/install-zig.sh "${ZIG_VERSION}"
+
+      - name: Build ReleaseSmall
+        run: zig build -Dtarget=${{ matrix.zig_target }} -Doptimize=ReleaseSmall
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: lnk-${{ matrix.target }}
+          path: zig-out/bin/lnk${{ matrix.ext }}
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v8
+
+      - name: Rename binaries
+        run: |
+          mv lnk-linux-x86_64/lnk lnk-linux-x86_64
+          mv lnk-linux-aarch64/lnk lnk-linux-aarch64
+          mv lnk-macos-aarch64/lnk lnk-macos-aarch64
+          mv lnk-macos-x86_64/lnk lnk-macos-x86_64
+          mv lnk-windows-x86_64/lnk.exe lnk-windows-x86_64.exe
+          mv lnk-windows-aarch64/lnk.exe lnk-windows-aarch64.exe
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            lnk-linux-x86_64
+            lnk-linux-aarch64
+            lnk-macos-aarch64
+            lnk-macos-x86_64
+            lnk-windows-x86_64.exe
+            lnk-windows-aarch64.exe
+          generate_release_notes: true
