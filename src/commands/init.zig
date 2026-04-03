@@ -64,8 +64,10 @@ pub fn run(allocator: std.mem.Allocator, args: []const []const u8) !void {
         try database.setConfig("token", token_z);
     }
 
-    // Set DB file permissions to 600 (owner only)
-    std.posix.fchmodat(std.fs.cwd().fd, db_path_z, 0o600, 0) catch {};
+    // Set DB file permissions to 600 (owner only, POSIX only)
+    if (@import("builtin").os.tag != .windows) {
+        std.posix.fchmodat(std.fs.cwd().fd, db_path_z, 0o600, 0) catch {};
+    }
 
     try stdout.print("✓ Initialized lnk at {s}\n", .{lnk_home});
 }
