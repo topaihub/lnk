@@ -49,31 +49,31 @@ pub fn run(allocator: std.mem.Allocator, args: []const []const u8) !void {
     const repo_file = try std.fs.path.join(allocator, &.{ repo_dir, name });
     defer allocator.free(repo_file);
 
-    // Remove symlink at original location
     if (linker.isSymlink(original_path.?)) {
         try linker.removeSymlink(original_path.?);
     }
-
-    // Copy file back from repo to original location
     std.fs.cwd().copyFile(repo_file, std.fs.cwd(), original_path.?, .{}) catch {};
-
-    // Delete from repo
     std.fs.cwd().deleteFile(repo_file) catch {};
 
-    // Delete from DB
     const name_z = try allocator.dupeZ(u8, name);
     defer allocator.free(name_z);
     try database.deleteEntry(name_z);
 
-    // Git commit + push
+    // Read auth from DB
+    const repo_url = try database.getConfig(allocator, "repo_url");
+    defer if (repo_url) |u| allocator.free(u);
+    const token = try database.getConfig(allocator, "token");
+    defer if (token) |t| allocator.free(t);
+
     const add_out = try git.addAll(allocator, repo_dir);
     allocator.free(add_out);
     const msg = try std.fmt.allocPrint(allocator, "remove: {s}", .{name});
     defer allocator.free(msg);
     const commit_out = git.commit(allocator, repo_dir, msg) catch null;
     if (commit_out) |o| allocator.free(o);
-    const push_out = git.push(allocator, repo_dir) catch null;
-    if (push_out) |o| allocator.free(o);
+    if (repo_url) |u| {
+        git.pushWithAuth(allocator, repo_dir, u, token) catch {};
+    }
 
     try stdout.print("✓ Removed {s}, restored to {s}\n", .{ name, original_path.? });
 }

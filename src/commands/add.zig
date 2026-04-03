@@ -13,7 +13,6 @@ pub fn run(allocator: std.mem.Allocator, args: []const []const u8) !void {
     }
     const source_path = args[0];
 
-    // Parse optional --name
     var custom_name: ?[]const u8 = null;
     var i: usize = 1;
     while (i < args.len) : (i += 1) {
@@ -23,7 +22,6 @@ pub fn run(allocator: std.mem.Allocator, args: []const []const u8) !void {
         }
     }
 
-    // Resolve absolute path
     const abs_path = try std.fs.cwd().realpathAlloc(allocator, source_path);
     defer allocator.free(abs_path);
 
@@ -42,16 +40,13 @@ pub fn run(allocator: std.mem.Allocator, args: []const []const u8) !void {
     const dest = try std.fs.path.join(allocator, &.{ repo_dir, name });
     defer allocator.free(dest);
 
-    // Move file to repo
     std.fs.cwd().rename(abs_path, dest) catch {
         try std.fs.cwd().copyFile(abs_path, std.fs.cwd(), dest, .{});
         try std.fs.cwd().deleteFile(abs_path);
     };
 
-    // Create symlink at original location
     try linker.createSymlink(dest, abs_path);
 
-    // Record in DB
     const db_path_z = try allocator.dupeZ(u8, db_path);
     defer allocator.free(db_path_z);
     var database = try db.Db.open(db_path_z);
@@ -63,15 +58,24 @@ pub fn run(allocator: std.mem.Allocator, args: []const []const u8) !void {
     defer allocator.free(abs_path_z);
     try database.addEntry(name_z, abs_path_z, "file");
 
-    // Git commit + push
+    // Read auth from DB
+    const repo_url = try database.getConfig(allocator, "repo_url");
+    defer if (repo_url) |u| allocator.free(u);
+    const token = try database.getConfig(allocator, "token");
+    defer if (token) |t| allocator.free(t);
+
+    // Git commit + push with auth
     const add_out = try git.addAll(allocator, repo_dir);
     allocator.free(add_out);
     const msg = try std.fmt.allocPrint(allocator, "add: {s}", .{name});
     defer allocator.free(msg);
     const commit_out = git.commit(allocator, repo_dir, msg) catch null;
     if (commit_out) |o| allocator.free(o);
-    const push_out = git.push(allocator, repo_dir) catch null;
-    if (push_out) |o| allocator.free(o);
+    if (repo_url) |u| {
+        git.pushWithAuth(allocator, repo_dir, u, token) catch |err| {
+            try stdout.print("Warning: push failed ({}) — changes committed locally\n", .{err});
+        };
+    }
 
     try stdout.print("✓ Added {s} → {s}\n", .{ abs_path, dest });
 }

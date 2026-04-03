@@ -35,25 +35,22 @@ pub fn run(allocator: std.mem.Allocator, args: []const []const u8) !void {
     // Create ~/.lnk/
     try std.fs.cwd().makePath(lnk_home);
 
-    // Build auth URL if token provided
-    var clone_url_buf: [2048]u8 = undefined;
-    var clone_url: []const u8 = repo_url;
-    if (token) |t| {
-        if (std.mem.startsWith(u8, repo_url, "https://")) {
-            const rest = repo_url["https://".len..];
-            const result = std.fmt.bufPrint(&clone_url_buf, "https://{s}@{s}", .{ t, rest }) catch return error.UrlTooLong;
-            clone_url = result;
-        }
-    }
+    // Clone with auth URL
+    const clone_url = try git.authUrl(allocator, repo_url, token);
+    defer allocator.free(clone_url);
 
     const stdout = std.fs.File.stdout().deprecatedWriter();
     try stdout.print("Cloning {s} ...\n", .{repo_url});
     const clone_out = try git.clone(allocator, clone_url, repo_dir);
     allocator.free(clone_out);
 
-    // Init DB
+    // Immediately reset remote URL to clean (no token)
+    try git.setRemoteUrl(allocator, repo_dir, repo_url);
+
+    // Set DB file permissions to 600
     const db_path_z = try allocator.dupeZ(u8, db_path);
     defer allocator.free(db_path_z);
+
     var database = try db.Db.open(db_path_z);
     defer database.close();
 
@@ -66,6 +63,9 @@ pub fn run(allocator: std.mem.Allocator, args: []const []const u8) !void {
         defer allocator.free(token_z);
         try database.setConfig("token", token_z);
     }
+
+    // Set DB file permissions to 600 (owner only)
+    std.posix.fchmodat(std.fs.cwd().fd, db_path_z, 0o600, 0) catch {};
 
     try stdout.print("✓ Initialized lnk at {s}\n", .{lnk_home});
 }

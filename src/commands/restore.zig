@@ -14,12 +14,21 @@ pub fn run(allocator: std.mem.Allocator) !void {
     const db_path_z = try allocator.dupeZ(u8, db_path);
     defer allocator.free(db_path_z);
 
-    try stdout.print("Pulling latest changes...\n", .{});
-    const pull_out = git.pull(allocator, repo_dir) catch null;
-    if (pull_out) |o| allocator.free(o);
-
     var database = try db.Db.open(db_path_z);
     defer database.close();
+
+    // Read auth from DB
+    const repo_url = try database.getConfig(allocator, "repo_url");
+    defer if (repo_url) |u| allocator.free(u);
+    const token = try database.getConfig(allocator, "token");
+    defer if (token) |t| allocator.free(t);
+
+    try stdout.print("Pulling latest changes...\n", .{});
+    if (repo_url) |u| {
+        git.pullWithAuth(allocator, repo_dir, u, token) catch |err| {
+            try stdout.print("Warning: pull failed ({})\n", .{err});
+        };
+    }
 
     const entries = try database.getAllEntries(allocator);
     defer {
@@ -37,7 +46,6 @@ pub fn run(allocator: std.mem.Allocator) !void {
         const repo_file = try std.fs.path.join(allocator, &.{ repo_dir, e.name });
         defer allocator.free(repo_file);
 
-        // Skip if already correctly linked
         if (linker.isSymlink(e.original_path)) {
             const target = linker.readLink(allocator, e.original_path) catch continue;
             defer allocator.free(target);
@@ -45,7 +53,6 @@ pub fn run(allocator: std.mem.Allocator) !void {
             linker.removeSymlink(e.original_path) catch {};
         }
 
-        // Remove existing file at original path if present
         std.fs.cwd().deleteFile(e.original_path) catch {};
 
         linker.createSymlink(repo_file, e.original_path) catch |err| {
