@@ -70,10 +70,10 @@ jobs:
 
       - name: Rename binaries
         run: |
-          mv lnk-linux-x86_64/lnk lnk-linux-x86_64
-          mv lnk-linux-aarch64/lnk lnk-linux-aarch64
-          mv lnk-macos-aarch64/lnk lnk-macos-aarch64
-          mv lnk-macos-x86_64/lnk lnk-macos-x86_64
+          mv lnk-linux-x86_64/lnk lnk-linux-x86_64.bin
+          mv lnk-linux-aarch64/lnk lnk-linux-aarch64.bin
+          mv lnk-macos-aarch64/lnk lnk-macos-aarch64.bin
+          mv lnk-macos-x86_64/lnk lnk-macos-x86_64.bin
           mv lnk-windows-x86_64/lnk.exe lnk-windows-x86_64.exe
           mv lnk-windows-aarch64/lnk.exe lnk-windows-aarch64.exe
 
@@ -81,10 +81,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            lnk-linux-x86_64
-            lnk-linux-aarch64
-            lnk-macos-aarch64
-            lnk-macos-x86_64
+            lnk-linux-x86_64.bin
+            lnk-linux-aarch64.bin
+            lnk-macos-aarch64.bin
+            lnk-macos-x86_64.bin
             lnk-windows-x86_64.exe
             lnk-windows-aarch64.exe
           generate_release_notes: true
