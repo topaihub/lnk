@@ -5,7 +5,7 @@
     .fingerprint = 0x9f9215afe169ebff,
     .dependencies = .{
         .framework = .{
-            .url = "git+https://github.com/topaihub/zig-framework.git",
+            .url = "git+https://github.com/topaihub/zig-framework.git#28f39cbc9c2477e7a4084f2677ac6877da0b206a",
             .hash = "framework-0.1.0-cN4T2o4CCQDN4p5zkHGtd91HKjvs8PrFiKuTLPsZ1wbA",
         },
     },
