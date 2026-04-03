@@ -1,0 +1,17 @@
+.{
+    .name = .lnk,
+    .version = "0.1.0",
+    .minimum_zig_version = "0.15.2",
+    .fingerprint = 0x9f9215afe169ebff,
+    .dependencies = .{
+        .framework = .{
+            .url = "git+https://github.com/topaihub/zig-framework.git",
+            .hash = "framework-0.1.0-cN4T2o4CCQDN4p5zkHGtd91HKjvs8PrFiKuTLPsZ1wbA",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
