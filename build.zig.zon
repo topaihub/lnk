@@ -1,0 +1,13 @@
+.{
+    .name = .lnk,
+    .version = "0.2.0",
+    .minimum_zig_version = "0.16.0",
+    .fingerprint = 0x9f9215afbf23a195,
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "deps",
+    },
+}
