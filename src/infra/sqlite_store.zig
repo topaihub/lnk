@@ -5,6 +5,10 @@ const c = @cImport({
     @cInclude("sqlite3.h");
 });
 
+// SQLITE_TRANSIENT = (sqlite3_destructor_type)(-1)
+// Manual definition because @cImport can't translate this on all platforms in Zig 0.16
+const SQLITE_TRANSIENT: c.sqlite3_destructor_type = @ptrFromInt(@as(usize, @bitCast(@as(isize, -1))));
+
 pub const SqliteStore = struct {
     handle: ?*c.sqlite3 = null,
 
@@ -34,7 +38,7 @@ pub const SqliteStore = struct {
     }
 
     fn bindText(stmt: ?*c.sqlite3_stmt, col: c_int, text: []const u8) void {
-        _ = c.sqlite3_bind_text(stmt, col, text.ptr, @intCast(text.len), c.SQLITE_TRANSIENT);
+        _ = c.sqlite3_bind_text(stmt, col, text.ptr, @intCast(text.len), SQLITE_TRANSIENT);
     }
 
     fn dupeCol(allocator: std.mem.Allocator, stmt: ?*c.sqlite3_stmt, col: c_int) ![]const u8 {
