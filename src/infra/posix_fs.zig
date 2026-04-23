@@ -45,12 +45,7 @@ pub const PosixFs = struct {
     }
 
     fn realpathAllocImpl(self: *PosixFs, allocator: std.mem.Allocator, path: []const u8) ![]u8 {
-        _ = self;
-        const path_z = try allocator.dupeZ(u8, path);
-        defer allocator.free(path_z);
-        var buf: [std.Io.Dir.max_path_bytes]u8 = undefined;
-        const result = std.c.realpath(path_z, &buf) orelse return error.FileNotFound;
-        return try allocator.dupe(u8, std.mem.sliceTo(result, 0));
+        return std.Io.Dir.cwd().realPathFileAlloc(self.io, path, allocator);
     }
 
     fn accessImpl(self: *PosixFs, path: []const u8) !void {
