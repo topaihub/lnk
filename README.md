@@ -1,15 +1,17 @@
+[中文](README_CN.md) | English
+
 # lnk — dotfiles sync via Git + symlinks
 
 Sync your dotfiles across machines using Git as storage and symlinks for linking.
 
-## 安装
+## Installation
 
-### 下载预编译二进制
+### Download Prebuilt Binaries
 
-从 [Releases](https://github.com/topaihub/lnk/releases) 页面下载对应平台的可执行文件。
+Download the executable for your platform from the [Releases](https://github.com/topaihub/lnk/releases) page.
 
-| 平台 | 文件名 |
-|------|--------|
+| Platform | Filename |
+|----------|----------|
 | Linux x86_64 | `lnk-linux-x86_64` |
 | Linux aarch64 | `lnk-linux-aarch64` |
 | macOS Apple Silicon | `lnk-macos-aarch64` |
@@ -22,13 +24,13 @@ chmod +x lnk-linux-x86_64
 sudo mv lnk-linux-x86_64 /usr/local/bin/lnk
 ```
 
-### 从源码构建
+### Build from Source
 
 ```bash
 git clone https://github.com/topaihub/lnk.git
 cd lnk
 zig build -Doptimize=ReleaseSmall
-# 二进制在 zig-out/bin/lnk
+# Binary is at zig-out/bin/lnk
 ```
 
 ## Quick Start
