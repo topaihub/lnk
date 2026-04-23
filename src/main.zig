@@ -42,7 +42,10 @@ pub fn main(init: std.process.Init) !void {
         for (arg_list.items) |a| allocator.free(a);
         arg_list.deinit(allocator);
     }
-    var it = std.process.Args.Iterator.init(init.minimal.args);
+    var it = if (@import("builtin").os.tag == .windows)
+        try std.process.Args.Iterator.initAllocator(init.minimal.args, allocator)
+    else
+        std.process.Args.Iterator.init(init.minimal.args);
     while (it.next()) |arg| {
         try arg_list.append(allocator, try allocator.dupe(u8, arg));
     }
