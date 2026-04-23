@@ -5,7 +5,6 @@ const c = @cImport({
     @cInclude("sqlite3.h");
 });
 
-
 pub const SqliteStore = struct {
     handle: ?*c.sqlite3 = null,
 
