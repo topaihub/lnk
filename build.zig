@@ -4,12 +4,12 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    // 日志组件（本地依赖）
-    const logging_module = b.addModule("zig-logging", .{
-        .root_source_file = b.path("../zig-logging/src/root.zig"),
+    // zig-logging dependency (from GitHub)
+    const logging_dep = b.dependency("zig-logging", .{
         .target = target,
         .optimize = optimize,
     });
+    const logging_module = logging_dep.module("zig-logging");
 
     const exe = b.addExecutable(.{
         .name = "lnk",
@@ -17,6 +17,9 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/main.zig"),
             .target = target,
             .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zig-logging", .module = logging_module },
+            },
         }),
     });
     exe.root_module.addCSourceFile(.{
@@ -25,7 +28,6 @@ pub fn build(b: *std.Build) void {
     });
     exe.root_module.addIncludePath(b.path("deps/sqlite3"));
     exe.root_module.link_libc = true;
-    exe.root_module.addImport("zig-logging", logging_module);
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);
