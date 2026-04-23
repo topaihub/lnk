@@ -2,6 +2,35 @@
 
 Sync your dotfiles across machines using Git as storage and symlinks for linking.
 
+## 安装
+
+### 下载预编译二进制
+
+从 [Releases](https://github.com/topaihub/lnk/releases) 页面下载对应平台的可执行文件。
+
+| 平台 | 文件名 |
+|------|--------|
+| Linux x86_64 | `lnk-linux-x86_64` |
+| Linux aarch64 | `lnk-linux-aarch64` |
+| macOS Apple Silicon | `lnk-macos-aarch64` |
+| macOS Intel | `lnk-macos-x86_64` |
+| Windows x86_64 | `lnk-windows-x86_64.exe` |
+
+```bash
+# Linux/macOS
+chmod +x lnk-linux-x86_64
+sudo mv lnk-linux-x86_64 /usr/local/bin/lnk
+```
+
+### 从源码构建
+
+```bash
+git clone https://github.com/topaihub/lnk.git
+cd lnk
+zig build -Doptimize=ReleaseSmall
+# 二进制在 zig-out/bin/lnk
+```
+
 ## Quick Start
 
 ```bash
